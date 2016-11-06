@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -43,16 +42,9 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public Account get(String name) {
         String lowerName = name.toLowerCase();
-        Integer id = repo.resolve(singletonList(lowerName)).get(lowerName);
-        if (id == null)
-            throw new NotFoundException("Account " + lowerName + " does not exist");
-
-        return lockService.runUnderReadLocks(singletonList(id), () -> {
-            //noinspection CodeBlock2Expr
-            return repo.findOneByName(lowerName)
+        return repo.findOneByName(lowerName)
                 .orElseThrow(() ->
                         new NotFoundException("Account " + lowerName + " does not exist"));
-        });
     }
 
     @Override
@@ -67,7 +59,7 @@ public class AccountServiceImpl implements AccountService {
         Integer id = repo.resolve(singletonList(lowerName)).get(lowerName);
         if (id == null)
             return;
-        lockService.runUnderWriteLocks(singletonList(id), () -> {
+        lockService.callUnderUpdateLocks(singletonList(id), () -> {
             repo.delete(id);
             return null;
         });
@@ -90,7 +82,7 @@ public class AccountServiceImpl implements AccountService {
             throw new OperationException("Some accounts of " +
                     operation.getAccountNames() + " do not exist");
 
-        return lockService.runUnderWriteLocks(resolvedIds.values(),
+        return lockService.callUnderUpdateLocks(resolvedIds.values(),
                 () -> operationExecutor.execute(operation));
 
     }

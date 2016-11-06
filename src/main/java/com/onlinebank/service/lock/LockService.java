@@ -16,11 +16,13 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.locks.Lock;
-import java.util.concurrent.locks.ReentrantReadWriteLock;
+import java.util.concurrent.locks.ReentrantLock;
 
 import static java.util.stream.Collectors.*;
 
 /**
+ *
+ * Reads would need no lock, tx would read READ_COMMITED data
  *
  * @param <T>
  * @param <R>
@@ -29,7 +31,7 @@ public class LockService<T extends Comparable<T>, R> {
     private static final Logger log = LoggerFactory.getLogger(LockService.class);
 
     //TODO: make weak?
-    private final ConcurrentMap<T, ReentrantReadWriteLock> lockMap = new ConcurrentHashMap<>();
+    private final ConcurrentMap<T, ReentrantLock> lockMap = new ConcurrentHashMap<>();
 
     @Autowired
     private ApplicationEventPublisher publisher;
@@ -42,16 +44,15 @@ public class LockService<T extends Comparable<T>, R> {
      * @param callable
      * @return
      */
-    public final R runUnderWriteLocks(Collection<T> keys, Callable<R> callable) {
+    public final R callUnderUpdateLocks(Collection<T> keys, Callable<R> callable) {
         Objects.requireNonNull(keys);
         Preconditions.checkArgument(!keys.contains(null), "Null lock keys are not allowed");
         Preconditions.checkArgument(keys.size() > 0);
 
-        //TODO: validate if I am having read lock!
         List<T> keyList = new ArrayList<>(keys);
         List<Lock> locks = keyList.stream()
                 .sorted()
-                .map(this::writeLock)
+                .map(this::getLock)
                 .collect(toList());
         locks.forEach(Lock::lock);
         try {
@@ -68,44 +69,8 @@ public class LockService<T extends Comparable<T>, R> {
         }
     }
 
-    /**
-     *
-     * @param keys
-     * @param callable
-     * @return
-     */
-    //TODO: avoid copy-paste
-    public final R runUnderReadLocks(Collection<T> keys, Callable<R> callable) {
-        Objects.requireNonNull(keys);
-        Preconditions.checkArgument(!keys.contains(null), "Null lock keys are not allowed");
-        Preconditions.checkArgument(keys.size() > 0);
-
-        List<T> keyList = new ArrayList<>(keys);
-        List<Lock> locks = keyList.stream()
-                .sorted()
-                .map(this::readLock)
-                .collect(toList());
-        locks.forEach(Lock::lock);
-        try {
-            return callable.call();
-        } catch (RuntimeException e) {
-            log.warn("Exception for keys {}: {}", keys, e.toString());
-            throw e;
-        } catch (Exception e) {
-            log.warn("Exception for keys {}: {}", keys, e.toString());
-            throw new RuntimeException(e);
-        } finally {
-            //TODO: async or not?
-            publisher.publishEvent(new LockedEvent(this, locks));
-        }
-    }
-
-    private Lock readLock(T key) {
-        return lockMap.computeIfAbsent(key, l -> new ReentrantReadWriteLock()).readLock();
-    }
-
-    private Lock writeLock(T key) {
-        return lockMap.computeIfAbsent(key, l -> new ReentrantReadWriteLock()).writeLock();
+    private Lock getLock(T key) {
+        return lockMap.computeIfAbsent(key, l -> new ReentrantLock());
     }
 
     @TransactionalEventListener(phase = TransactionPhase.AFTER_COMPLETION)
