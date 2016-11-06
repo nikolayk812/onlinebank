@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration scan="true" scanPeriod="30 seconds">
+
+    <contextListener class="ch.qos.logback.classic.jul.LevelChangePropagator">
+        <resetJUL>true</resetJUL>
+    </contextListener>
+
+    <!-- To enable JMX Management -->
+    <jmxConfigurator/>
+
+    <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <charset>UTF-8</charset>
+            <pattern>%d{yyyy-MM-dd HH:mm:ss.SSS} %-5level %logger{0} [%file:%line] %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <logger name="com.onlinebank" level="DEBUG"/>
+    <logger name="org.springframework.orm.jpa" level="DEBUG"/>
+    <logger name="org.springframework.transaction" level="DEBUG"/>
+    <logger name="org.springframework.dao" level="DEBUG"/>
+
+    <!-- log4jdbc sql & jdbc logging -->
+    <logger name="jdbc.sqlonly" level="DEBUG"/>
+
+    <logger name="jdbc.sqltiming" level="ERROR"/>
+
+    <logger name="jdbc.audit" level="ERROR"/>
+
+    <logger name="jdbc.resultsettable" level="DEBUG"/>
+
+    <logger name="jdbc.resultset" level="ERROR"/>
+
+    <logger name="jdbc.connection" level="INFO"/>
+
+    <logger name="log4jdbc.debug" level="ERROR"/>
+
+    <root level="INFO">
+        <appender-ref ref="console"/>
+    </root>
+</configuration>
