@@ -25,8 +25,8 @@ import static org.junit.Assert.fail;
 
 @ContextConfiguration(classes = AppConfig.class)
 @RunWith(SpringJUnit4ClassRunner.class)
-@Sql(scripts = "classpath:db/postgres/initDB.sql")
-@ActiveProfiles(POSTGRES)
+@Sql(scripts = "classpath:db/h2/initDB.sql")
+@ActiveProfiles(H2)
 public class AccountServiceImplTest {
     private static final int ACCOUNT_ID = 100;
     private static final int ACCOUNT_ID_2 = ACCOUNT_ID + 1;
