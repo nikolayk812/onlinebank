@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 import javax.persistence.EntityManagerFactory;
 import javax.sql.DataSource;
+import java.net.URISyntaxException;
 import java.util.Properties;
 
 
@@ -46,10 +47,10 @@ public abstract class AppConfig {
         return new PropertySourcesPlaceholderConfigurer();
     }
 
-    abstract DataSource dataSource();
+    abstract DataSource dataSource() throws URISyntaxException;
 
     @Bean
-    public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
+    public LocalContainerEntityManagerFactoryBean entityManagerFactory() throws URISyntaxException {
         LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
         em.setDataSource(dataSource());
         em.setPackagesToScan("com.onlinebank.model");
