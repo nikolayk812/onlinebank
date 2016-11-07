@@ -8,18 +8,21 @@ import com.onlinebank.service.exceptions.NotFoundException;
 import com.onlinebank.service.exceptions.OperationException;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.context.jdbc.Sql;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
+import org.springframework.transaction.TransactionSystemException;
 
 import java.math.BigDecimal;
+import java.util.List;
 
-import static com.onlinebank.util.AssertUtil.assertBigDecimalEquals;
 import static com.onlinebank.util.Constants.H2;
-import static com.onlinebank.util.Constants.POSTGRES;
+import static com.onlinebank.util.TestUtil.assertBigDecimalEquals;
 import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.fail;
 
@@ -28,6 +31,8 @@ import static org.junit.Assert.fail;
 @Sql(scripts = "classpath:db/h2/initDB.sql")
 @ActiveProfiles(H2)
 public class AccountServiceImplTest {
+    private static final Logger log = LoggerFactory.getLogger(AccountServiceImplTest.class);
+
     private static final int ACCOUNT_ID = 100;
     private static final int ACCOUNT_ID_2 = ACCOUNT_ID + 1;
     private static final String ACCOUNT_NAME = "first";
@@ -52,7 +57,17 @@ public class AccountServiceImplTest {
     @Test(expected = NotFoundException.class)
     public void testGetFail() throws Exception {
         Account account = service.get("Non-existing");
-        System.out.println(account);
+        log.info("{}", account);
+    }
+
+    @Test
+    public void testGetAllSorted() throws Exception {
+        service.create(ACCOUNT_NAME_2);
+        service.create(ACCOUNT_NAME);
+        List<Account> accounts = service.getAll();
+        assertEquals("Wrong number of accounts", 2, accounts.size());
+        assertEquals("Wrong account name", accounts.get(0).getName(), ACCOUNT_NAME);
+        assertEquals("Wrong account name", accounts.get(1).getName(), ACCOUNT_NAME_2);
     }
 
     @Test(expected = DataIntegrityViolationException.class)
@@ -60,6 +75,13 @@ public class AccountServiceImplTest {
         Account created = service.create(ACCOUNT_NAME);
         assertEquals("Wrong account id", ACCOUNT_ID, created.getId().intValue());
         service.create(ACCOUNT_NAME.toUpperCase());
+    }
+
+    //TODO: Hibernate Validator throws javax.validation.ConstraintViolationException which is not org.hibernate.HibernateException
+    //TODO: which results in wrong translation and weird TransactionSystemException being thrown
+    @Test(expected = TransactionSystemException.class)
+    public void testCreateIllegalNameFail() throws Exception {
+        service.create("?%");
     }
 
     @Test

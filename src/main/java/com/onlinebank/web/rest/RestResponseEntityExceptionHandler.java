@@ -47,12 +47,21 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
         return new ErrorInfo(req.getRequestURL(), e);
     }
 
-    @ResponseStatus(value = HttpStatus.NOT_ACCEPTABLE)      //406
+    @ResponseStatus(value = HttpStatus.FORBIDDEN)      //403
     @ExceptionHandler(OperationException.class)
     @ResponseBody
     @Order(Ordered.HIGHEST_PRECEDENCE + 3)
     ErrorInfo operationError(HttpServletRequest req, OperationException e) {
         logger.error("Exception at request " + req.getRequestURL());
+        return new ErrorInfo(req.getRequestURL(), e);
+    }
+
+    @ResponseStatus(value = HttpStatus.BAD_REQUEST)      //400
+    @ExceptionHandler(RuntimeException.class)
+    @ResponseBody
+    @Order(Ordered.LOWEST_PRECEDENCE - 1)
+    ErrorInfo badRequest(HttpServletRequest req, RuntimeException e) {
+        logger.error("Exception at request {}" + req.getRequestURL());
         return new ErrorInfo(req.getRequestURL(), e);
     }
 
@@ -62,6 +71,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
     @ResponseBody
     @Order(Ordered.LOWEST_PRECEDENCE)
     public ErrorInfo handleError(HttpServletRequest req, Exception e) {
+        logger.error("Exception at request " + req.getRequestURL(), e);
         return new ErrorInfo(req.getRequestURL(), e);
     }
 

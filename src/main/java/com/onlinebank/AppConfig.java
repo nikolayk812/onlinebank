@@ -4,12 +4,13 @@ import com.onlinebank.model.Account;
 import com.onlinebank.service.lock.LockService;
 import com.onlinebank.util.Constants;
 import com.zaxxer.hikari.HikariDataSource;
-import net.sf.log4jdbc.tools.Log4JdbcCustomFormatter;
-import net.sf.log4jdbc.tools.LoggingType;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.context.annotation.*;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
+import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
-import org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.orm.jpa.JpaTransactionManager;
 import org.springframework.orm.jpa.JpaVendorAdapter;
@@ -78,12 +79,14 @@ public class AppConfig {
         LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
         em.setDataSource(dataSource());
         em.setPackagesToScan("com.onlinebank.model");
-
-        JpaVendorAdapter vendorAdapter = new HibernateJpaVendorAdapter();
-        em.setJpaVendorAdapter(vendorAdapter);
+        em.setJpaVendorAdapter(vendorAdapter());
         em.setJpaProperties(additionalProperties());
-
         return em;
+    }
+
+    @Bean
+    public JpaVendorAdapter vendorAdapter() {
+        return new HibernateJpaVendorAdapter();
     }
 
     @Bean
@@ -101,13 +104,8 @@ public class AppConfig {
     public PlatformTransactionManager transactionManager(EntityManagerFactory emf) {
         JpaTransactionManager transactionManager = new JpaTransactionManager();
         transactionManager.setEntityManagerFactory(emf);
+        transactionManager.setJpaDialect(vendorAdapter().getJpaDialect());
         return transactionManager;
-    }
-
-    //TODO: really needed? is it by default?
-    @Bean
-    public PersistenceExceptionTranslationPostProcessor exceptionTranslation() {
-        return new PersistenceExceptionTranslationPostProcessor();
     }
 
     private Properties additionalProperties() {

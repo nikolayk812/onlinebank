@@ -20,7 +20,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static com.onlinebank.util.AssertUtil.assertBigDecimalEquals;
+import static com.onlinebank.util.TestUtil.assertBigDecimalEquals;
 import static com.onlinebank.util.Constants.H2;
 
 @ContextConfiguration(classes = AppConfig.class)

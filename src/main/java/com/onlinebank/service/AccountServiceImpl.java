@@ -9,6 +9,7 @@ import com.onlinebank.service.lock.LockService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +27,7 @@ import static java.util.Collections.singletonList;
 @Transactional(isolation = Isolation.READ_COMMITTED)
 public class AccountServiceImpl implements AccountService {
     private final static Logger log = LoggerFactory.getLogger(AccountServiceImpl.class);
+    private static final Sort SORT_BY_NAME_ASC = new Sort(Sort.Direction.ASC, "name");
 
     private final LockService<Integer, Account> lockService;
     private final AccountRepository repo;
@@ -58,19 +60,19 @@ public class AccountServiceImpl implements AccountService {
         String lowerName = name.toLowerCase();
         Integer id = repo.resolve(singletonList(lowerName)).get(lowerName);
         if (id == null)
-            return;
+            throw new NotFoundException("Account '" + name + "' not found");
+        //TODO: delete lock afterward
         lockService.callUnderUpdateLocks(singletonList(id), () -> {
             repo.delete(id);
             return null;
         });
     }
 
-    //TODO: overrides properties sor not?
+    //TODO: overrides properties or not?
     @Transactional(isolation = Isolation.READ_COMMITTED, readOnly = true)
     @Override
     public List<Account> getAll() {
-        //TODO: take all locks?
-        return repo.findAll();
+        return repo.findAll(SORT_BY_NAME_ASC);
     }
 
     @Override

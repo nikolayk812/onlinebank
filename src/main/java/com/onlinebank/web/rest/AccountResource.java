@@ -2,15 +2,19 @@ package com.onlinebank.web.rest;
 
 
 import com.onlinebank.model.Account;
-import com.onlinebank.model.operation.OperationImpl;
 import com.onlinebank.model.operation.Operations;
 import com.onlinebank.service.AccountService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import javax.validation.Valid;
 import java.util.List;
@@ -22,7 +26,7 @@ import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 //TODO: delete JSON_VALUE because RestController already mean that?
 @RequestMapping(value = URL, produces = APPLICATION_JSON_VALUE)
 public class AccountResource {
-    public static final String URL = "/rest/accounts";
+    static final String URL = "/rest/accounts";
 
     @Autowired
     private AccountService service;
@@ -33,9 +37,17 @@ public class AccountResource {
     }
 
     @PutMapping(value = "/{name}", consumes = APPLICATION_JSON_VALUE)
-    public Account operation(@PathVariable("name") String name,
+    public Account operation(@PathVariable("name") String resourceName,
                              @RequestBody @Valid OperationDTO operation) {
-        //TODO: validate name matches!
+        double accountsSize = operation.getAccountNames().size();
+        if (accountsSize == 0 || accountsSize > 2)
+            throw new IllegalArgumentException("Wrong number of accounts " + accountsSize +
+                    " in operation " + operation.getOperationType() + ". Allowed values: 1 or 2.");
+
+        String sourceAccountName = operation.getAccountNames().get(0);
+        if (!sourceAccountName.equalsIgnoreCase(resourceName))
+            throw new IllegalArgumentException("Operation account name '" + sourceAccountName +
+                    "' and resource name: '" + resourceName + "' do not match");
 
         return service.processOperation(
                 Operations.create(operation.getOperationType(),
@@ -48,27 +60,16 @@ public class AccountResource {
         return new ResponseEntity<>(createdAccount, HttpStatus.CREATED);
     }
 
-    @DeleteMapping(value = "/{name}", consumes = APPLICATION_JSON_VALUE)
-    public void delete(@RequestBody String name) {
-        //TODO: validate name matches!
+    @DeleteMapping(value = "/{name}")
+    public ResponseEntity<Void> delete(@PathVariable("name") String resourceName,
+                       @RequestBody String accountName) {
+        if (!accountName.equalsIgnoreCase(resourceName))
+            throw new IllegalArgumentException("Cannot delete account '" + resourceName +
+                    "' because payload name does not match: '" + accountName + "'");
 
-        service.delete(name);
+        service.delete(resourceName);
+        return ResponseEntity.noContent().build();
     }
-
-    private static HttpHeaders createTextPlainHeaders() {
-        HttpHeaders textPlainHeaders = new HttpHeaders();
-        textPlainHeaders.setContentType(MediaType.TEXT_PLAIN);
-        return textPlainHeaders;
-    }
-
-    //TODO: enable paging
-    /*@GetMapping
-    public ResponseEntity<List<Account>> getAll(Pageable pageable) throws URISyntaxException {
-        Page<Account> page = repo.findAll(pageable);
-        HttpHeaders headers = PaginationUtil.generatePaginationHttpHeaders(page, "/api/users");
-        return new ResponseEntity<>(page.getContent(), headers, HttpStatus.OK);
-    }
-    */
 
     @GetMapping
     public List<Account> getAll() {
