@@ -1,6 +1,6 @@
 package com.onlinebank.service;
 
-import com.onlinebank.AppConfig;
+import com.onlinebank.LocalAppConfig;
 import com.onlinebank.model.Account;
 import com.onlinebank.model.operation.Operations;
 import org.junit.After;
@@ -20,10 +20,10 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
-import static com.onlinebank.util.TestUtil.assertBigDecimalEquals;
 import static com.onlinebank.util.Constants.H2;
+import static com.onlinebank.util.TestUtil.assertBigDecimalEquals;
 
-@ContextConfiguration(classes = AppConfig.class)
+@ContextConfiguration(classes = {LocalAppConfig.class})
 @RunWith(SpringJUnit4ClassRunner.class)
 @Sql(scripts = "classpath:db/h2/initDB.sql")
 @ActiveProfiles(H2)

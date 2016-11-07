@@ -1,6 +1,7 @@
 package com.onlinebank.service;
 
 import com.onlinebank.AppConfig;
+import com.onlinebank.LocalAppConfig;
 import com.onlinebank.model.Account;
 import com.onlinebank.model.operation.Operation;
 import com.onlinebank.model.operation.Operations;
@@ -26,7 +27,7 @@ import static com.onlinebank.util.TestUtil.assertBigDecimalEquals;
 import static junit.framework.TestCase.assertEquals;
 import static org.junit.Assert.fail;
 
-@ContextConfiguration(classes = AppConfig.class)
+@ContextConfiguration(classes = {AppConfig.class, LocalAppConfig.class})
 @RunWith(SpringJUnit4ClassRunner.class)
 @Sql(scripts = "classpath:db/h2/initDB.sql")
 @ActiveProfiles(H2)
@@ -157,7 +158,7 @@ public class AccountServiceImplTest {
         assertEquals(0, service.getAll().size());
     }
 
-    @Test
+    @Test(expected = NotFoundException.class)
     public void testDeleteNonExistingAccount() throws Exception {
         service.delete("non-existing");
 

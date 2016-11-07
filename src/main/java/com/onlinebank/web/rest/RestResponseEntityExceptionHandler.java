@@ -2,6 +2,8 @@ package com.onlinebank.web.rest;
 
 import com.onlinebank.service.exceptions.NotFoundException;
 import com.onlinebank.service.exceptions.OperationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -19,13 +21,14 @@ import java.io.IOException;
 
 @ControllerAdvice(annotations = RestController.class)
 public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionHandler {
+    private final static Logger log = LoggerFactory.getLogger(RestResponseEntityExceptionHandler.class);
 
     @ResponseStatus(HttpStatus.NOT_FOUND)
     @ExceptionHandler(NotFoundException.class)
     @ResponseBody
     @Order(Ordered.HIGHEST_PRECEDENCE)
     public ErrorInfo notFound(HttpServletRequest req, NotFoundException e) {
-        logger.error("Exception at request " + req.getRequestURL());
+        log.error("Exception at request " + req.getRequestURL());
         return new ErrorInfo(req.getRequestURL(), e);
     }
 
@@ -34,7 +37,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
     @ResponseBody
     @Order(Ordered.HIGHEST_PRECEDENCE + 1)
     public ErrorInfo conflict(HttpServletRequest req, DataIntegrityViolationException e) throws IOException {
-        logger.error("Exception at request " + req.getRequestURL());
+        log.error("Exception at request " + req.getRequestURL());
         return new ErrorInfo(req.getRequestURL(), e);
     }
 
@@ -43,7 +46,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
     @ResponseBody
     @Order(Ordered.HIGHEST_PRECEDENCE + 2)
     ErrorInfo validationError(HttpServletRequest req, ValidationException e) {
-        logger.error("Exception at request " + req.getRequestURL());
+        log.error("Exception at request " + req.getRequestURL());
         return new ErrorInfo(req.getRequestURL(), e);
     }
 
@@ -52,7 +55,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
     @ResponseBody
     @Order(Ordered.HIGHEST_PRECEDENCE + 3)
     ErrorInfo operationError(HttpServletRequest req, OperationException e) {
-        logger.error("Exception at request " + req.getRequestURL());
+        log.error("Exception at request " + req.getRequestURL());
         return new ErrorInfo(req.getRequestURL(), e);
     }
 
@@ -61,7 +64,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
     @ResponseBody
     @Order(Ordered.LOWEST_PRECEDENCE - 1)
     ErrorInfo badRequest(HttpServletRequest req, RuntimeException e) {
-        logger.error("Exception at request {}" + req.getRequestURL());
+        log.error("Exception at request {}" + req.getRequestURL());
         return new ErrorInfo(req.getRequestURL(), e);
     }
 
@@ -71,7 +74,7 @@ public class RestResponseEntityExceptionHandler extends ResponseEntityExceptionH
     @ResponseBody
     @Order(Ordered.LOWEST_PRECEDENCE)
     public ErrorInfo handleError(HttpServletRequest req, Exception e) {
-        logger.error("Exception at request " + req.getRequestURL(), e);
+        log.error("Exception at request " + req.getRequestURL(), e);
         return new ErrorInfo(req.getRequestURL(), e);
     }
 

@@ -2,14 +2,11 @@ package com.onlinebank;
 
 import com.onlinebank.model.Account;
 import com.onlinebank.service.lock.LockService;
-import com.onlinebank.util.Constants;
 import com.zaxxer.hikari.HikariDataSource;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Profile;
-import org.springframework.context.annotation.PropertySource;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.orm.jpa.JpaTransactionManager;
@@ -28,34 +25,9 @@ import java.util.Properties;
 @ComponentScan(basePackages = "com.onlinebank.repo, com.onlinebank.service")
 @EnableJpaRepositories("com.onlinebank")
 @EnableTransactionManagement
-public class AppConfig {
-
-    @Configuration
-    @Profile(Constants.HEROKU)
-    @PropertySource("classpath:db/heroku/heroku.properties")
-    static class Heroku {
-    }
-
-    @Configuration
-    @Profile(Constants.POSTGRES)
-    @PropertySource("classpath:db/postgres/postgres.properties")
-    static class Postgres {
-    }
-
-    @Configuration
-    @Profile(Constants.H2)
-    @PropertySource("classpath:db/h2/h2.properties")
-    static class H2 {
-    }
-
+public abstract class AppConfig {
     @Value("${jdbc.driverClassName}")
     private String driverClassName;
-    @Value("${jdbc.url}")
-    private String url;
-    @Value("${jdbc.username}")
-    private String username;
-    @Value("${jdbc.password}")
-    private String password;
 
     @Value("${hibernate.dialect}")
     private String hibernateDialect;
@@ -74,6 +46,8 @@ public class AppConfig {
         return new PropertySourcesPlaceholderConfigurer();
     }
 
+    abstract DataSource dataSource();
+
     @Bean
     public LocalContainerEntityManagerFactoryBean entityManagerFactory() {
         LocalContainerEntityManagerFactoryBean em = new LocalContainerEntityManagerFactoryBean();
@@ -89,15 +63,19 @@ public class AppConfig {
         return new HibernateJpaVendorAdapter();
     }
 
-    @Bean
-    public DataSource dataSource() {
+    DataSource createHikariDataSource(String dbUrl, String username, String password) {
         HikariDataSource dataSource = new HikariDataSource();
         dataSource.setDriverClassName(driverClassName);
-        dataSource.setJdbcUrl(url);
+        dataSource.setJdbcUrl(dbUrl);
         dataSource.addDataSourceProperty("user", username);
         dataSource.addDataSourceProperty("password", password);
         dataSource.setMaximumPoolSize(poolSize);
         return dataSource;
+    }
+
+    @Bean
+    public LockService<Integer, Account> accountLockService() {
+        return new LockService<>();
     }
 
     @Bean
@@ -115,10 +93,5 @@ public class AppConfig {
         properties.setProperty("hibernate.show_sql", hibernateShowSql);
         properties.setProperty("hibernate.format_sql", hibernateFormatSql);
         return properties;
-    }
-
-    @Bean
-    public LockService<Integer, Account> accountLockService() {
-        return new LockService<>();
     }
 }

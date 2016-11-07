@@ -1,6 +1,7 @@
 package com.onlinebank.web.rest;
 
 import com.onlinebank.AppConfig;
+import com.onlinebank.LocalAppConfig;
 import com.onlinebank.model.operation.OperationType;
 import com.onlinebank.model.operation.Operations;
 import com.onlinebank.service.AccountService;
@@ -30,7 +31,7 @@ import static org.hamcrest.Matchers.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@ContextConfiguration(classes = {AppConfig.class, WebConfig.class})
+@ContextConfiguration(classes = {AppConfig.class, LocalAppConfig.class, WebConfig.class})
 @WebAppConfiguration
 @RunWith(SpringJUnit4ClassRunner.class)
 @ActiveProfiles(Constants.H2)
