@@ -6,17 +6,8 @@ import com.onlinebank.RemoteAppConfig;
 import org.springframework.web.servlet.support.AbstractAnnotationConfigDispatcherServletInitializer;
 
 import javax.servlet.Filter;
-import javax.servlet.ServletContext;
-import javax.servlet.ServletException;
 
 public class WebInitializer extends AbstractAnnotationConfigDispatcherServletInitializer {
-
-
-    @Override
-    public void onStartup(ServletContext servletContext) throws ServletException {
-        super.onStartup(servletContext);
-        //servletContext.setInitParameter("spring.profiles.active", System.getenv("spring.profiles.active"));
-    }
 
     @Override
     protected Class<?>[] getRootConfigClasses() {
@@ -35,7 +26,7 @@ public class WebInitializer extends AbstractAnnotationConfigDispatcherServletIni
 
     @Override
     protected Filter[] getServletFilters() {
-        //TODO: CORS?! http://websystique.com/springmvc/spring-mvc-4-restful-web-services-crud-example-resttemplate/
+        //TODO: add CORS? http://websystique.com/springmvc/spring-mvc-4-restful-web-services-crud-example-resttemplate/
         return null;
     }
 

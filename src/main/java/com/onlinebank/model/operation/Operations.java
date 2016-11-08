@@ -5,17 +5,22 @@ import com.google.common.base.Preconditions;
 import java.math.BigDecimal;
 import java.util.List;
 
-import static com.onlinebank.model.operation.OperationType.DEPOSIT;
-import static com.onlinebank.model.operation.OperationType.TRANSFER;
-import static com.onlinebank.model.operation.OperationType.WITHDRAWAL;
+import static com.onlinebank.model.operation.OperationType.*;
 import static java.util.Arrays.asList;
 import static java.util.Collections.singletonList;
 
+/**
+ * Utility class to construct instances of {@link Operation}
+ */
 public final class Operations {
     private Operations() {
     }
 
     public static Operation create(OperationType operationType, List<String> accountNames, BigDecimal amount) {
+        if (accountNames.size() != operationType.getAccountNumber())
+            throw new IllegalArgumentException("Wrong number of accounts " + accountNames.size() +
+                    " for operation: " + operationType);
+
         String account = accountNames.get(0);
         switch (operationType) {
             case TRANSFER:
@@ -29,7 +34,6 @@ public final class Operations {
         }
 
     }
-
     public static Operation transfer(String fromAccount, BigDecimal amount, String toAccountName) {
         Preconditions.checkArgument(!fromAccount.equalsIgnoreCase(toAccountName),
                 "Illegal TRANSFER operation to the same account: '" + fromAccount + "'");
@@ -43,4 +47,5 @@ public final class Operations {
     public static Operation withdraw(String account, BigDecimal amount) {
         return new OperationImpl(WITHDRAWAL, amount, singletonList(account));
     }
+
 }

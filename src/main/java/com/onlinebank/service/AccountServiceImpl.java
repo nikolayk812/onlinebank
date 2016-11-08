@@ -16,18 +16,17 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 import static java.util.Collections.singletonList;
-
-//TODO: add validation
-//TODO: dirty checks?
-//TODO: account name transformer/strategy
+import static java.util.stream.Collectors.toList;
 
 @Service
 @Transactional(isolation = Isolation.READ_COMMITTED)
 public class AccountServiceImpl implements AccountService {
     private final static Logger log = LoggerFactory.getLogger(AccountServiceImpl.class);
     private static final Sort SORT_BY_NAME_ASC = new Sort(Sort.Direction.ASC, "name");
+    private static final Function<String, String> NAME_TRANSFORMER = String::toLowerCase;
 
     private final LockService<Integer, Account> lockService;
     private final AccountRepository repo;
@@ -40,10 +39,10 @@ public class AccountServiceImpl implements AccountService {
         this.operationExecutor = operationExecutor;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(isolation = Isolation.READ_COMMITTED, readOnly = true)
     @Override
     public Account get(String name) {
-        String lowerName = name.toLowerCase();
+        String lowerName = NAME_TRANSFORMER.apply(name);
         return repo.findOneByName(lowerName)
                 .orElseThrow(() ->
                         new NotFoundException("Account " + lowerName + " does not exist"));
@@ -51,24 +50,22 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public Account create(String name) {
-        Account account = new Account(name.toLowerCase());
+        Account account = new Account(NAME_TRANSFORMER.apply(name));
         return repo.save(account);
     }
 
     @Override
     public void delete(String name) {
-        String lowerName = name.toLowerCase();
+        String lowerName = NAME_TRANSFORMER.apply(name);
         Integer id = repo.resolve(singletonList(lowerName)).get(lowerName);
         if (id == null)
-            throw new NotFoundException("Account '" + name + "' not found");
-        //TODO: delete lock afterward
+            throw new NotFoundException(lowerName);
         lockService.callUnderUpdateLocks(singletonList(id), () -> {
             repo.delete(id);
             return null;
         });
     }
 
-    //TODO: overrides properties or not?
     @Transactional(isolation = Isolation.READ_COMMITTED, readOnly = true)
     @Override
     public List<Account> getAll() {
@@ -77,12 +74,14 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public Account processOperation(Operation operation) {
-        //TODO: lowerNames!!!
+        List<String> lowerNames = operation.getAccountNames().stream()
+                .map(NAME_TRANSFORMER)
+                .collect(toList());
 
-        Map<String, Integer> resolvedIds = repo.resolve(operation.getAccountNames());
-        if (operation.getAccountNames().size() > resolvedIds.size())
-            throw new OperationException("Some accounts of " +
-                    operation.getAccountNames() + " do not exist");
+        Map<String, Integer> resolvedIds = repo.resolve(lowerNames);
+        if (lowerNames.size() > resolvedIds.size())
+            throw new OperationException(operation, "Some account(s) of " +
+                    lowerNames + " do not exist");
 
         return lockService.callUnderUpdateLocks(resolvedIds.values(),
                 () -> operationExecutor.execute(operation));

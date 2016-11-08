@@ -23,7 +23,6 @@ import static com.onlinebank.web.rest.AccountResource.URL;
 import static org.springframework.http.MediaType.APPLICATION_JSON_VALUE;
 
 @RestController
-//TODO: delete JSON_VALUE because RestController already mean that?
 @RequestMapping(value = URL, produces = APPLICATION_JSON_VALUE)
 public class AccountResource {
     static final String URL = "/rest/accounts";
@@ -36,7 +35,7 @@ public class AccountResource {
         return service.get(name);
     }
 
-    @PutMapping(value = "/{name}", consumes = APPLICATION_JSON_VALUE)
+    @PutMapping(value = "/{name}")
     public Account operation(@PathVariable("name") String resourceName,
                              @RequestBody @Valid OperationDTO operation) {
         double accountsSize = operation.getAccountNames().size();

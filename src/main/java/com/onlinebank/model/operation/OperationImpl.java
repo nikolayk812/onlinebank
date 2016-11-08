@@ -17,10 +17,12 @@ public class OperationImpl implements Operation {
     OperationImpl(OperationType operationType, BigDecimal amount, Collection<String> accountNames) {
         Preconditions.checkArgument(amount.compareTo(BigDecimal.ZERO) == 1,
                 "Positive operation amount expected, got " + amount);
-        this.amount = requireNonNull(amount);
-        this.operationType = requireNonNull(operationType);
         Preconditions.checkArgument(accountNames.size() <= 2,
                 "Operations for 1 and 2 accounts supported, got " + accountNames.size());
+        Preconditions.checkArgument(!accountNames.contains(null));
+
+        this.amount = requireNonNull(amount);
+        this.operationType = requireNonNull(operationType);
         this.accountNames = ImmutableList.copyOf(accountNames);
     }
 

@@ -62,7 +62,7 @@ public class AccountServiceImplTest {
     }
 
     @Test
-    public void testGetAllSorted() throws Exception {
+    public void testGetAllResultIsSorted() throws Exception {
         service.create(ACCOUNT_NAME_2);
         service.create(ACCOUNT_NAME);
         List<Account> accounts = service.getAll();
@@ -97,6 +97,17 @@ public class AccountServiceImplTest {
 
         Account retrieved = service.get(ACCOUNT_NAME);
         assertAccountEquals(expected, retrieved);
+    }
+
+    //Hibernate Validator throws javax.validation.ConstraintViolationException which is not org.hibernate.HibernateException
+    //which results in wrong translation and weird TransactionSystemException being thrown
+    @Test(expected = TransactionSystemException.class)
+    public void testDepositTooLargeAmount() throws Exception {
+        service.create(ACCOUNT_NAME);
+
+        BigDecimal amount = new BigDecimal("123456789012345");
+        Operation deposit = Operations.deposit(ACCOUNT_NAME, amount);
+        service.processOperation(deposit);
     }
 
     @Test

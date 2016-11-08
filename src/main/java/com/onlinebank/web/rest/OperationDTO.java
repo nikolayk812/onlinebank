@@ -9,20 +9,20 @@ import java.util.List;
 import static java.util.Objects.requireNonNull;
 
 /**
- * TODO:
+ * DTO object for {@link Operation}
  *
- * setters and getters are required for Jackson
+ * Note: public setters and getters, empty constructor are required for Jackson.
  */
-public class OperationDTO implements Operation {
+class OperationDTO implements Operation {
 
     private List<String> accountNames;
     private BigDecimal amount;
     private OperationType operationType;
 
-    public OperationDTO() {
+    OperationDTO() {
     }
 
-    public OperationDTO(List<String> accountNames, BigDecimal amount, OperationType operationType) {
+    OperationDTO(List<String> accountNames, BigDecimal amount, OperationType operationType) {
         this.accountNames = requireNonNull(accountNames);
         this.amount = requireNonNull(amount);
         this.operationType = requireNonNull(operationType);
@@ -53,5 +53,15 @@ public class OperationDTO implements Operation {
 
     public void setOperationType(OperationType operationType) {
         this.operationType = operationType;
+    }
+
+    @Override
+    public String toString() {
+        final StringBuilder sb = new StringBuilder("OperationDTO{");
+        sb.append("accountNames=").append(accountNames);
+        sb.append(", amount=").append(amount);
+        sb.append(", operationType=").append(operationType);
+        sb.append('}');
+        return sb.toString();
     }
 }

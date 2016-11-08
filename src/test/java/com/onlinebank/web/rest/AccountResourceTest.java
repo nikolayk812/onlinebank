@@ -20,7 +20,6 @@ import org.springframework.test.context.web.WebAppConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
-import org.springframework.web.filter.CharacterEncodingFilter;
 
 import javax.annotation.PostConstruct;
 import java.math.BigDecimal;
@@ -40,14 +39,6 @@ public class AccountResourceTest {
     private static final String ACCOUNT_NAME = "first";
     private static final String ACCOUNT_NAME_2 = "second";
 
-    //TODO: delete?
-    private static final CharacterEncodingFilter CHARACTER_ENCODING_FILTER = new CharacterEncodingFilter();
-
-    static {
-        CHARACTER_ENCODING_FILTER.setEncoding("UTF-8");
-        CHARACTER_ENCODING_FILTER.setForceEncoding(true);
-    }
-
     private MockMvc mockMvc;
 
     @Autowired
@@ -58,9 +49,7 @@ public class AccountResourceTest {
 
     @PostConstruct
     void postConstruct() {
-        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext)
-                .addFilter(CHARACTER_ENCODING_FILTER)
-                .build();
+        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
     }
 
     @Test
@@ -98,8 +87,9 @@ public class AccountResourceTest {
                 .content(ACCOUNT_NAME)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.name", is(ACCOUNT_NAME)));
-                //.andExpect(jsonPath("$.balance", TestUtil.closeTo(0d))); TODO: fix
-        ;
+                //TODO fix, looks like JsonPath issue
+                //Expected: a numeric value within <1.0E-8> of <0.0> but: was a java.lang.Integer (<0>)
+                //.andExpect(jsonPath("$.balance", TestUtil.closeTo(0d)));
     }
 
     @Test

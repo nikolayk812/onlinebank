@@ -19,9 +19,7 @@ import javax.validation.constraints.Digits;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
 import java.math.BigDecimal;
-
-//TODO: log4jdbc
-//TODO: add immediate validation
+import java.util.Objects;
 
 @Entity
 @Table(name = "accounts")
@@ -36,12 +34,12 @@ public class Account {
 
     @Column(name = "balance", nullable = false)
     @DecimalMin(value = "0.00")
-    @Digits(integer = 14, fraction = 10) //TODO: check!
+    @Digits(integer = 14, fraction = 10)
     @NotNull
     private BigDecimal balance;
 
     @NotEmpty
-    @Pattern(regexp = Constants.LOGIN_REGEX)
+    @Pattern(regexp = Constants.ACCOUNT_NAME_REGEX)
     @Column(name = "name", unique = true, nullable = false, updatable = false)
     private String name;
 
@@ -58,11 +56,6 @@ public class Account {
         this.balance = balance;
         this.name = name;
     }
-
-    //TODO: JSon
-//    public boolean isNew() {
-//        return id == null;
-//    }
 
     public Integer getId() {
         return id;
@@ -90,8 +83,20 @@ public class Account {
         this.name = name;
     }
 
-    //TODO: equals and hashCode
+    //name is a business key
+    //see https://docs.jboss.org/hibernate/stable/core.old/reference/en/html/persistent-classes-equalshashcode.html
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        Account account = (Account) o;
+        return Objects.equals(name, account.name);
+    }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(name);
+    }
 
     @Override
     public String toString() {
@@ -102,4 +107,5 @@ public class Account {
         sb.append('}');
         return sb.toString();
     }
+
 }
