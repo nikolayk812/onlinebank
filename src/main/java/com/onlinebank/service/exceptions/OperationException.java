@@ -24,7 +24,6 @@ public class OperationException extends RuntimeException {
 
     @Override
     public String toString() {
-        //TODO:
         final StringBuilder sb = new StringBuilder("OperationException{");
         sb.append("operation=").append(operation);
         sb.append('}');

@@ -14,7 +14,6 @@ public class NotFoundException extends RuntimeException {
 
     @Override
     public String toString() {
-        //TODO:
         final StringBuilder sb = new StringBuilder("NotFoundException{");
         sb.append("name='").append(name).append('\'');
         sb.append('}');
